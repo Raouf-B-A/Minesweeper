@@ -1,34 +1,32 @@
 node() {
-  // Étape 1
-  stage('etapes-1') {
-    parallel(
-      'etape-1.1': {
-        echo "Job 1 de l'étape 1"
-      },
-      'etape-1.2': {
-        echo "Job 2 de l'étape 1"
-      },
-    )
+  ensureMaven();
+  stage('Checkout'){
+	git url: 'https://github.com/Raouf-B-A/Minesweeper'
   }
-  // Étape 2
-  stage('etapes-2') {
-    echo "Job 1 de l'étape 2"
+  stage('Compile and Unit Tests'){
+	sh "mvn clean package"
   }
-  // Étape 3
-  stage('etapes-3') {
-    parallel(
-      'etape-3.1': {
-        // Cette opération doit prendre moins de 10 secondes
-        timeout(time: 10, unit: 'SECONDS') {
-          echo "Job 1 de l'étape 3"
-        }
-      },
-      'etape-3.2': {
-        echo "Job 2 de l'étape 3"
-      },
-      'etape-3.3': {
-        echo "Job 3 de l'étape 3"
-      },
-    )
+  stage('Publish'){
+	sh "mvn install"
+  }
+  stage('Quality Test'){
+	sh "mvn sonar:sonar"
+  }
+  stage('Func Test'){
+	deploy('func-test')
+	runSelenium('func-test')
+  }
+  stage('Load Test'){
+	deploy('perf-test')
+	runJmeter('perf-test')
+  }
+  stage('Acceptance Test'){
+	input id: 'deploy-stage', message: 'Deploy to Staging ?', ok: 'Deploy', submitter: 'jpbriend'
+	deploy('acc-test')
+  }
+  stage('Prod'){
+	input id: 'deploy-prod', message: 'Deploy to Production ?', ok: 'Deploy', submitter: 'jpbriend'
+	deploy('acc-test')
+	deploy('prod')
   }
 }
