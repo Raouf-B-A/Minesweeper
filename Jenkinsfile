@@ -1,5 +1,4 @@
 node() {
-  ensureMaven();
   stage('Checkout'){
 	git url: 'https://github.com/Raouf-B-A/Minesweeper'
   }
@@ -11,14 +10,6 @@ node() {
   }
   stage('Quality Test'){
 	sh "mvn sonar:sonar"
-  }
-  stage('Func Test'){
-	deploy('func-test')
-	runSelenium('func-test')
-  }
-  stage('Load Test'){
-	deploy('perf-test')
-	runJmeter('perf-test')
   }
   stage('Acceptance Test'){
 	input id: 'deploy-stage', message: 'Deploy to Staging ?', ok: 'Deploy', submitter: 'jpbriend'
